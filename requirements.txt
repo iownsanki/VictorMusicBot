@@ -1,6 +1,7 @@
-pyrogram
+pyrofork
+py-tgcalls
+ntgcalls
 tgcrypto
-pytgcalls
 yt-dlp
 python-dotenv
 imageio-ffmpeg
