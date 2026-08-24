@@ -47,13 +47,11 @@ logging.basicConfig(
 )
 logger = logging.getLogger("VCMusicBot")
 
-# Initialize Pyrogram Bot & Assistant Clients
 bot = Client(
     "VCMusicBot",
     api_id=config.API_ID,
     api_hash=config.API_HASH,
     bot_token=config.BOT_TOKEN,
-    in_memory=True
 )
 
 assistant = Client(
@@ -61,8 +59,13 @@ assistant = Client(
     api_id=config.API_ID,
     api_hash=config.API_HASH,
     session_string=config.SESSION_STRING,
-    in_memory=True
 )
+
+@bot.on_message(group=-1)
+async def log_all_messages(_, message: Message):
+    sender = message.from_user.first_name if message.from_user else "Channel"
+    text = message.text or message.caption or "[Media]"
+    print(f"\n[MSG RECEIVED] From: {sender} in Chat {message.chat.id} -> '{text}'")
 
 pytgcalls = PyTgCalls(assistant)
 
