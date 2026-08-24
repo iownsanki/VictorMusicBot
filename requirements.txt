@@ -1,0 +1,6 @@
+pyrogram==2.3.69
+tgcrypto==1.2.5
+pytgcalls
+yt-dlp
+python-dotenv
+imageio-ffmpeg
