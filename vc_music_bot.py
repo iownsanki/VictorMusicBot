@@ -263,8 +263,11 @@ async def ping_handler(_, message: Message):
     await msg.edit_text(f"🏓 **Pong!** `{delta_ms}ms`\n🤖 **Bot & Assistant Online!**")
 
 
-@bot.on_message(filters.command(["play", "p"], prefixes=config.COMMAND_PREFIXES) & filters.group)
+@bot.on_message(filters.command(["play", "p"], prefixes=config.COMMAND_PREFIXES))
 async def play_handler(_, message: Message):
+    if message.chat.type.value in ["private"]:
+        await message.reply_text("⚠️ **Yeh command sirf Groups ke liye hai!**\n\nMujhe apne Group me add karein, VC on karein aur wahan `/play <song>` likhein.")
+        return
     chat_id = message.chat.id
     query = " ".join(message.command[1:]).strip() if len(message.command) > 1 else ""
 
@@ -341,8 +344,11 @@ async def play_handler(_, message: Message):
         )
 
 
-@bot.on_message(filters.command(["pause"], prefixes=config.COMMAND_PREFIXES) & filters.group)
+@bot.on_message(filters.command(["pause"], prefixes=config.COMMAND_PREFIXES))
 async def pause_handler(_, message: Message):
+    if message.chat.type.value in ["private"]:
+        await message.reply_text("⚠️ **Yeh command Group Voice Chat ke liye hai!**")
+        return
     chat_id = message.chat.id
     try:
         await pytgcalls.pause(chat_id)
@@ -351,8 +357,11 @@ async def pause_handler(_, message: Message):
         await message.reply_text(f"❌ **Error pausing stream:** `{e}`")
 
 
-@bot.on_message(filters.command(["resume"], prefixes=config.COMMAND_PREFIXES) & filters.group)
+@bot.on_message(filters.command(["resume"], prefixes=config.COMMAND_PREFIXES))
 async def resume_handler(_, message: Message):
+    if message.chat.type.value in ["private"]:
+        await message.reply_text("⚠️ **Yeh command Group Voice Chat ke liye hai!**")
+        return
     chat_id = message.chat.id
     try:
         await pytgcalls.resume(chat_id)
@@ -361,8 +370,11 @@ async def resume_handler(_, message: Message):
         await message.reply_text(f"❌ **Error resuming stream:** `{e}`")
 
 
-@bot.on_message(filters.command(["skip", "next"], prefixes=config.COMMAND_PREFIXES) & filters.group)
+@bot.on_message(filters.command(["skip", "next"], prefixes=config.COMMAND_PREFIXES))
 async def skip_handler(_, message: Message):
+    if message.chat.type.value in ["private"]:
+        await message.reply_text("⚠️ **Yeh command Group Voice Chat ke liye hai!**")
+        return
     chat_id = message.chat.id
     if chat_id not in music_queues or not music_queues[chat_id]:
         await message.reply_text("❌ **Nothing is playing to skip!**")
@@ -392,8 +404,11 @@ async def skip_handler(_, message: Message):
         await message.reply_text("⏭ **Skipped! Queue is now empty, Assistant left VC.**")
 
 
-@bot.on_message(filters.command(["end", "stop", "leavevc", "disconnect"], prefixes=config.COMMAND_PREFIXES) & filters.group)
+@bot.on_message(filters.command(["end", "stop", "leavevc", "disconnect"], prefixes=config.COMMAND_PREFIXES))
 async def end_handler(_, message: Message):
+    if message.chat.type.value in ["private"]:
+        await message.reply_text("⚠️ **Yeh command Group Voice Chat ke liye hai!**")
+        return
     chat_id = message.chat.id
     music_queues[chat_id].clear()
     current_playing.pop(chat_id, None)
@@ -404,8 +419,11 @@ async def end_handler(_, message: Message):
         await message.reply_text(f"⏹ **Stream ended and queue cleared.**")
 
 
-@bot.on_message(filters.command(["queue", "q"], prefixes=config.COMMAND_PREFIXES) & filters.group)
+@bot.on_message(filters.command(["queue", "q"], prefixes=config.COMMAND_PREFIXES))
 async def queue_handler(_, message: Message):
+    if message.chat.type.value in ["private"]:
+        await message.reply_text("⚠️ **Yeh command Group Voice Chat ke liye hai!**")
+        return
     chat_id = message.chat.id
     if chat_id not in music_queues or not music_queues[chat_id]:
         await message.reply_text("📭 **Queue is currently empty.**")
@@ -419,8 +437,11 @@ async def queue_handler(_, message: Message):
     await message.reply_text(msg)
 
 
-@bot.on_message(filters.command(["volume", "vol"], prefixes=config.COMMAND_PREFIXES) & filters.group)
+@bot.on_message(filters.command(["volume", "vol"], prefixes=config.COMMAND_PREFIXES))
 async def volume_handler(_, message: Message):
+    if message.chat.type.value in ["private"]:
+        await message.reply_text("⚠️ **Yeh command Group Voice Chat ke liye hai!**")
+        return
     chat_id = message.chat.id
     if len(message.command) < 2:
         await message.reply_text("❓ **Usage:** `/volume <1-200>`")
@@ -464,12 +485,26 @@ async def main():
     print("🎵 VC Music Bot is ready to stream!")
     print("=" * 50)
 
-    await idle()
-
-    print("Stopping services...")
-    await pytgcalls.stop()
-    await assistant.stop()
-    await bot.stop()
+    # Permanent event loop keep-alive
+    stop_event = asyncio.Event()
+    try:
+        await stop_event.wait()
+    except (KeyboardInterrupt, SystemExit):
+        pass
+    finally:
+        print("Stopping services...")
+        try:
+            await pytgcalls.stop()
+        except Exception:
+            pass
+        try:
+            await assistant.stop()
+        except Exception:
+            pass
+        try:
+            await bot.stop()
+        except Exception:
+            pass
 
 if __name__ == "__main__":
     asyncio.run(main())
